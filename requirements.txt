@@ -1,0 +1,6 @@
+﻿PySide6>=6.7
+SQLModel>=0.0.22
+pydantic>=2.8
+pydantic-settings>=2.3
+pytest>=8.3
+python-dateutil>=2.9
