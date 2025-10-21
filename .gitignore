@@ -1,0 +1,28 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.spec
+
+# Venv
+.venv/
+.venv312/
+env/
+
+# Build / PyInstaller
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# DB / backups / cache
+*.db
+backups/
+
+# OS
+Thumbs.db
+.DS_Store
