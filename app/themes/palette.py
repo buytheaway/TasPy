@@ -1,13 +1,23 @@
-﻿BG = "#0E1412"
-SURFACE = "#121A17"
-SURFACE_ALT = "#15201C"
-ACCENT = "#25A56A"
-ACCENT_HOVER = "#2FC27C"
-TEXT = "#E7F2EC"
-TEXT_SEC = "#A8C5B8"
-MUTED = "#7A9289"
-ERROR = "#E85D5D"
-WARN = "#D5A93C"
-SUCCESS = "#2FC27C"
-BORDER = "#1E2A26"
-RADIUS = 16
+# themes/palette.py
+
+class Palette:
+    # neutrals
+    BG = "#0B0B0C"
+    SURFACE = "#121314"
+    SURFACE_ALT = "#181A1B"
+    BORDER = "#242729"
+
+    # text
+    TEXT = "#E8EAEF"
+    TEXT_DIM = "#A9AFB7"
+    TEXT_MUTED = "#8D949C"
+
+    # accent (green used sparingly)
+    ACCENT = "#38B37E"
+    ACCENT_HOVER = "#49C48E"
+    ACCENT_MUTED = "#2E8F65"
+
+    # states
+    ERROR = "#E15D64"
+    WARN = "#D3A642"
+    OK = "#49C48E"

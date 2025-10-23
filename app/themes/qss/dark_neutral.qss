@@ -1,0 +1,129 @@
+/* themes/qss/dark_neutral.qss */
+
+@define-color bg            #0B0B0C;
+@define-color surface       #121314;
+@define-color surfaceAlt    #181A1B;
+@define-color border        #242729;
+@define-color text          #E8EAEF;
+@define-color textDim       #A9AFB7;
+@define-color textMuted     #8D949C;
+@define-color accent        #38B37E;
+@define-color accentHover   #49C48E;
+@define-color accentMuted   #2E8F65;
+@define-color danger        #E15D64;
+@define-color warn          #D3A642;
+
+/* base */
+QWidget {
+  background: @bg;
+  color: @text;
+  selection-background-color: @accentMuted;
+  selection-color: @text;
+}
+
+/* toolbars / statusbar */
+QToolBar, QStatusBar {
+  background: @surface;
+  border-bottom: 1px solid @border;
+}
+QToolButton {
+  background: transparent;
+  color: @textDim;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+QToolButton:hover { background: @surfaceAlt; color: @text; }
+QToolButton:pressed { background: @border; }
+
+/* inputs */
+QLineEdit, QPlainTextEdit, QTextEdit, QSpinBox, QDateEdit, QComboBox {
+  background: @surface;
+  color: @text;
+  border: 1px solid @border;
+  border-radius: 10px;
+  padding: 8px 10px;
+  selection-background-color: @accentMuted;
+}
+QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus,
+QSpinBox:focus, QDateEdit:focus, QComboBox:focus {
+  border: 1px solid @accentMuted;
+}
+
+/* buttons */
+QPushButton {
+  background: @surfaceAlt;
+  color: @text;
+  border: 1px solid @border;
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+QPushButton:hover { border-color: @accentMuted; }
+QPushButton:pressed { background: @border; }
+QPushButton[accent="true"] {
+  background: @accent;
+  color: #0a0f0d;
+  border: none;
+}
+QPushButton[accent="true"]:hover { background: @accentHover; }
+
+/* tree/list */
+QTreeView, QListView {
+  background: @surface;
+  border: 1px solid @border;
+  alternate-background-color: @surfaceAlt;
+}
+QTreeView::item, QListView::item {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(36,39,41,0.4);
+}
+QTreeView::item:selected, QListView::item:selected {
+  background: rgba(56,179,126,0.15);
+  color: @text;
+}
+QTreeView::branch:closed:has-children { image: none; }
+QTreeView::branch:open:has-children   { image: none; }
+
+/* headers */
+QHeaderView::section {
+  background: @surfaceAlt;
+  color: @textDim;
+  padding: 6px 8px;
+  border: none;
+  border-bottom: 1px solid @border;
+}
+
+/* checkboxes / radios */
+QCheckBox, QRadioButton { color: @text; }
+QCheckBox::indicator, QRadioButton::indicator {
+  width: 16px; height: 16px;
+  border: 1px solid @border;
+  border-radius: 4px; background: @surfaceAlt;
+}
+QCheckBox::indicator:checked { background: @accent; border: 1px solid @accent; }
+
+/* scrollbars */
+QScrollBar:vertical, QScrollBar:horizontal {
+  background: transparent;
+  margin: 6px; border: none;
+}
+QScrollBar::handle {
+  background: @border; border-radius: 6px;
+}
+QScrollBar::handle:hover {
+  background: @accentMuted;
+}
+
+/* progress / badges */
+QProgressBar {
+  background: @surface;
+  border: 1px solid @border;
+  border-radius: 8px;
+  text-align: center;
+  color: @textDim;
+}
+QProgressBar::chunk { background: @accentMuted; border-radius: 8px; }
+
+/* subtle links */
+QLabel[textFormat="richText"] a, QTextBrowser {
+  color: @accent;
+}

@@ -1,4 +1,4 @@
-﻿from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable
 from sqlmodel import select
 from shutil import copy2
 from datetime import datetime
@@ -8,7 +8,7 @@ from .db import session_scope
 
 
 class TaskRepository:
-    # ------------------- CRUD -------------------
+    # CRUD 
     def add(self, task: Task) -> Task:
         with session_scope() as s:
             oi = self._next_order_index(s, task.parent_id)
@@ -87,7 +87,7 @@ class TaskRepository:
             self._insert_at_index(s, obj, new_order_index)
             s.flush()
 
-    # ------------------- UI helper -------------------
+    # UI helper
     def children_plain(self, parent_id: Optional[int]) -> list[dict]:
         """Возвращает список dict без ORM, отсортированный по order_index."""
         with session_scope() as s:
@@ -116,6 +116,23 @@ class TaskRepository:
                 }
                 for r in rows
             ]
+
+            rows = s.exec(
+    select(
+        Task.id, Task.parent_id, Task.title,
+        Task.status, Task.priority, Task.due_at, Task.order_index,
+        Task.category
+    ).where(Task.parent_id == parent_id).order_by(Task.order_index)
+        ).all()
+        return [
+    {
+        "id": r[0], "parent_id": r[1], "title": r[2],
+        "status": r[3], "priority": r[4], "due_at": r[5],
+        "order_index": r[6], "category": r[7],
+    }
+    for r in rows
+]
+        
 
     # ------------------- Queries -------------------
     def siblings(self, parent_id: Optional[int]) -> List[Task]:

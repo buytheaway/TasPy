@@ -5,6 +5,10 @@ __pycache__/
 *.pyd
 *.egg-info/
 *.spec
+.venv/
+.venv312/
+__pycache__/
+*.pyc
 
 # Venv
 .venv/
