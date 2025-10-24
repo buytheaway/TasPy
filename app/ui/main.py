@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from PySide6.QtWidgets import QApplication
 from app.core.config import settings
 from app.core.logging_config import setup_logging

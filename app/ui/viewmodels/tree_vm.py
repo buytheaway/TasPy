@@ -25,7 +25,7 @@ class TaskTreeModel(QAbstractItemModel):
         self.root_items.clear()
 
         def build(parent_item: Optional[TreeItem], parent_id: Optional[int]):
-            for r in self.repo.children_plain(parent_id):  # <-- ПЛОСКИЕ записи
+            for r in self.repo.children_plain(parent_id):  # ← ПЛОСКИЕ ЗАПИСИ ИЗ РЕПО
                 node = TreeItem(r, parent_item)
                 if parent_item:
                     parent_item.children.append(node)
