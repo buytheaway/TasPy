@@ -29,7 +29,7 @@ class TaskEditor(QWidget):
         self.bus = bus
         self.current_id: int | None = None
 
-        # --- поля
+        # поля
         self.title = QLineEdit(placeholderText="Название задачи")
         self.title.setMinimumHeight(36)
         self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -65,7 +65,7 @@ class TaskEditor(QWidget):
         self.countdown.setToolTip("Времени осталось до дедлайна")
         self.overdue.setToolTip("Сколько прошло после дедлайна (если просрочено)")
 
-        # --- layout
+        # layout
         form = QFormLayout(self)
         form.setLabelAlignment(Qt.AlignRight)
         form.setFormAlignment(Qt.AlignTop)
@@ -164,7 +164,7 @@ class TaskEditor(QWidget):
         self._update_timers()
         self._auto_resize_desc()
 
-    # ---------- внутреннее ----------
+    # внутреннее 
     def _clear(self):
         self.current_id = None
         self.title.clear()
@@ -259,8 +259,4 @@ class TaskEditor(QWidget):
         btn_ok.clicked.connect(apply_and_close)
         btn_cancel.clicked.connect(dlg.reject)
         dlg.resize(700, 500)
-        dlg.exec()
-        #huyna
-        #huyna
-        #huyna
-        #huyna
+        dlg.exec()     
