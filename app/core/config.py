@@ -1,9 +1,9 @@
-﻿from pydantic_settings import BaseSettings
+﻿from pathlib import Path
+from pydantic_settings import BaseSettings
 from pydantic import Field
-from pathlib import Path
 
 
-class Settings(BaseSettings):
+class AppConfig(BaseSettings):
     app_name: str = "TaskTree"
     db_path: Path = Field(default=Path("tasks.db"))
     theme_qss: Path = Field(default=Path("app/themes/qss/dark_neutral.qss"))
@@ -14,4 +14,5 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 
-settings = Settings()
+# Backwards-compatible instance used elsewhere in the codebase
+settings = AppConfig()

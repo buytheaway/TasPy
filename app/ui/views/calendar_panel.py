@@ -1,93 +1,55 @@
-﻿from __future__ import annotations
-
-from datetime import datetime, date
-from typing import List, Optional
-
-from PySide6.QtCore import Qt, QDate, Signal
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QCalendarWidget,
-    QListWidget,
-    QListWidgetItem,
-    QLabel,
-)
-
-from ...domain.models import Task  # type: ignore[import]
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QCalendarWidget, QListWidget, QListWidgetItem
+from PySide6.QtCore import Qt, Signal, QDate
+from datetime import date
+from app.data.repositories import TaskRepository
+from app.core.events import EventBus
 
 
 class CalendarPanel(QWidget):
-    \"\"\"Панель с календарем и списком задач на выбранный день.
+    dateChanged = Signal(object)
+    taskActivated = Signal(int)
 
-    Это чистый виджет, не лезет сам в базу. Внешний код:
-      - подписывается на dateChanged(date)
-      - когда дата изменилась, выбирает задачи из репозитория и подает их в set_tasks_for_day(...)
-      - по double-click на задаче можно открыть редактор задачи (через сигнал taskActivated)
-    \"\"\"
+    def __init__(self, repo: TaskRepository, bus: EventBus):
+        super().__init__()
+        self.repo = repo; self.bus = bus
+        v = QVBoxLayout(self); v.setContentsMargins(8,8,8,8); v.setSpacing(6)
+        self.cal = QCalendarWidget()
+        self.list = QListWidget()
+        v.addWidget(self.cal); v.addWidget(self.list, 1)
+        self._filters = {}
 
-    dateChanged = Signal(date)
-    taskActivated = Signal(int)  # task_id
+        self.cal.selectionChanged.connect(self.reload_for_selected_day)
+        # emit higher-level signals expected by MainWindow
+        self.cal.selectionChanged.connect(lambda: self.dateChanged.emit(self.current_date()))
+        self.list.itemDoubleClicked.connect(lambda it: self.taskActivated.emit(it.data(Qt.UserRole)))
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
+        self.reload_for_selected_day()
 
-        self.setObjectName("CalendarPanel")
+    def apply_filters(self, f: dict):
+        self._filters = f or {}
+        self.reload_for_selected_day()
 
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(8, 8, 8, 8)
-        main_layout.setSpacing(6)
-
-        top_layout = QHBoxLayout()
-        self.calendar = QCalendarWidget()
-        self.calendar.setGridVisible(True)
-        self.calendar.selectionChanged.connect(self._on_date_changed)
-
-        right_layout = QVBoxLayout()
-        self.day_label = QLabel()
-        self.day_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-
-        self.tasks_list = QListWidget()
-        self.tasks_list.itemDoubleClicked.connect(self._on_item_double_clicked)
-
-        right_layout.addWidget(self.day_label)
-        right_layout.addWidget(self.tasks_list, 1)
-
-        top_layout.addWidget(self.calendar, 1)
-        top_layout.addLayout(right_layout, 1)
-
-        main_layout.addLayout(top_layout, 1)
-
-        # начальная дата
-        self._on_date_changed()
-
-    # --- публичный API ---
+    def reload_for_selected_day(self):
+        self.list.clear()
+        sel = self.cal.selectedDate()
+        q = self._filters.get("q") or ""
+        rows = self.repo.search(q)
+        for t in rows:
+            if not getattr(t, "due_at", None): continue
+            d = QDate(t.due_at.year, t.due_at.month, t.due_at.day)
+            if d != sel: continue
+            it = QListWidgetItem(f"{t.title} • {t.status} • prio {t.priority or 3}")
+            it.setData(Qt.UserRole, t.id)
+            self.list.addItem(it)
 
     def current_date(self) -> date:
-        qd: QDate = self.calendar.selectedDate()
+        qd = self.cal.selectedDate()
         return date(qd.year(), qd.month(), qd.day())
 
-    def set_tasks_for_day(self, tasks: List[Task]) -> None:
-        \"\"\"Обновить список задач на текущий выбранный день.
-
-        Внешний код сам фильтрует по due_at.date() и вызывает эту функцию.
-        \"\"\"
-        self.tasks_list.clear()
+    def set_tasks_for_day(self, tasks: list):
+        """Populate the list from an explicit tasks list (used by MainWindow)."""
+        self.list.clear()
         for t in tasks:
-            if t.id is None:
-                continue
-            item = QListWidgetItem(t.title)
+            item = QListWidgetItem(f"{t.title} • {t.status} • prio {t.priority or 3}")
             item.setData(Qt.UserRole, t.id)
-            self.tasks_list.addItem(item)
-
-    # --- внутреннее ---
-
-    def _on_date_changed(self) -> None:
-        d = self.current_date()
-        self.day_label.setText(f"Задачи на {d.strftime('%d.%m.%Y')}")
-        self.dateChanged.emit(d)
-
-    def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
-        task_id = item.data(Qt.UserRole)
-        if task_id is not None:
-            self.taskActivated.emit(int(task_id))
+            self.list.addItem(item)

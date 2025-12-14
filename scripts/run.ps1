@@ -43,7 +43,7 @@ if (-not (Test-Path $venvPy)) {
 Write-Info "Обновляю pip..."
 & $venvPy -m pip install -U pip
 
-if (Test-Path $PyReq -and (Get-Content $PyReq | Where-Object { $_.Trim() -ne "" } | Measure-Object).Count -gt 0) {
+if ((Test-Path $PyReq) -and ((Get-Content $PyReq | Where-Object { $_.Trim() -ne "" } | Measure-Object).Count -gt 0)) {
     Write-Info "Ставлю зависимости из $PyReq..."
     & $venvPy -m pip install -r $PyReq
 } else {

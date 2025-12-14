@@ -1,58 +1,58 @@
-﻿from PySide6.QtWidgets import QToolBar, QInputDialog, QMessageBox
-from PySide6.QtGui import QAction
+﻿from PySide6.QtWidgets import QToolBar, QToolButton
 from app.data.repositories import TaskRepository
 from app.core.events import EventBus
 from app.usecases.add_task import AddTask, AddTaskInput
+from app.usecases.update_task import UpdateTask, UpdateTaskInput
 from app.usecases.delete_task import DeleteTask, DeleteTaskInput
-from app.usecases.toggle_status import ToggleStatus, ToggleStatusInput
 
 class MainToolbar(QToolBar):
-    def __init__(self, parent=None, repo: TaskRepository=None, bus: EventBus=None):
-        super().__init__("MainToolbar", parent)
+    def __init__(self, parent, repo: TaskRepository, bus: EventBus):
+        super().__init__(parent)
         self.repo = repo; self.bus = bus
+        self.setMovable(False)
 
-        act_new = QAction("+ Новая", self)
-        act_sub = QAction("↳ Подзадача", self)
-        act_edit_done = QAction("✓ Готово", self)
-        act_del = QAction("⌫ Удалить", self)
+        def btn(text, accent=False):
+            b = QToolButton(self); b.setText(text)
+            # Use Qt enum for clarity (instance attribute is not present in PySide6)
+            from PySide6.QtCore import Qt
+            b.setToolButtonStyle(Qt.ToolButtonTextOnly)
+            if accent: b.setProperty("accent", True)
+            self.addWidget(b); return b
 
-        act_new.triggered.connect(self._add_root)
-        act_sub.triggered.connect(self._add_child)
-        act_edit_done.triggered.connect(self._toggle_done)
-        act_del.triggered.connect(self._delete)
+        b_add = btn("+ Новая", True)
+        b_sub = btn("↳ Подзадача")
+        b_done = btn("✓ Готово")
+        b_del = btn("⌫ Удалить")
 
-        for a in (act_new, act_sub, act_edit_done, act_del):
-            self.addAction(a)
+        b_add.clicked.connect(lambda: AddTask(repo, bus).execute(AddTaskInput(None, "Новая задача")))
+        b_sub.clicked.connect(self._add_sub)
+        b_done.clicked.connect(self._done)
+        b_del.clicked.connect(self._delete)
 
-    def _current_task_id(self) -> int | None:
-        tv = self.parent().centralWidget().widget(0)
-        idx = tv.currentIndex()
-        if not idx or not idx.isValid():
-            return None
-        return idx.internalPointer().row["id"]
+        # store helpers for callbacks
+        self._parent = parent
+        self._repo = repo
+        self._bus = bus
 
-    def _add_root(self):
-        title, ok = QInputDialog.getText(self, "Новая задача", "Заголовок:")
-        if ok and title:
-            AddTask(self.repo, self.bus).execute(AddTaskInput(None, title))
-
-    def _add_child(self):
-        parent_id = self._current_task_id()
-        if not parent_id:
-            QMessageBox.information(self, "Подзадача", "Выберите родительскую задачу")
-            return
-        title, ok = QInputDialog.getText(self, "Подзадача", "Заголовок:")
-        if ok and title:
-            AddTask(self.repo, self.bus).execute(AddTaskInput(parent_id, title))
-
-    def _toggle_done(self):
-        tid = self._current_task_id()
-        if tid:
-            ToggleStatus(self.repo, self.bus).execute(ToggleStatusInput(tid))
+    def _done(self):
+        tid = self.parent().get_current_id()
+        if not tid: return
+        print(f"[Toolbar] toggling done for tid={tid}")
+        obj = self.repo.get(tid)
+        new_status = "done" if obj.status != "done" else "todo"
+        UpdateTask(self.repo, self.bus).execute(UpdateTaskInput(tid, {"status": new_status}))
 
     def _delete(self):
-        tid = self._current_task_id()
-        if not tid:
-            return
-        if QMessageBox.question(self, "Удалить", "Удалить ветвь целиком?"):
-            DeleteTask(self.repo, self.bus).execute(DeleteTaskInput(tid, cascade=True))
+        tid = self.parent().get_current_id()
+        if not tid: return
+        print(f"[Toolbar] deleting tid={tid}")
+        DeleteTask(self.repo, self.bus).execute(DeleteTaskInput(tid, cascade=True))
+
+    def _add_sub(self):
+        tid = None
+        try:
+            tid = self._parent.get_current_id()
+        except Exception:
+            tid = None
+        print(f"[Toolbar] add subtask under parent={tid}")
+        AddTask(self._repo, self._bus).execute(AddTaskInput(tid, "Подзадача"))

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Optional
 
@@ -17,14 +17,14 @@ from PySide6.QtWidgets import (
 
 
 class SideBar(QWidget):
-    \"\"\"Левая панель фильтров.
+    """Левая панель фильтров.
 
     Сигналы:
       - searchChanged(str)         — текст поиска
-      - statusChanged(str)         — \"\" | \"todo\" | \"in_progress\" | \"done\"
-      - categoryChanged(str)       — имя категории либо \"\"
-      - quickFilterSelected(str)   — один из: \"today\", \"week\", \"overdue\", \"high_priority\"
-    \"\"\"
+      - statusChanged(str)         — "" | "todo" | "in_progress" | "done"
+      - categoryChanged(str)       — имя категории либо ""
+      - quickFilterSelected(str)   — один из: "today", "week", "overdue", "high_priority"
+    """
 
     searchChanged = Signal(str)
     statusChanged = Signal(str)
@@ -108,7 +108,7 @@ class SideBar(QWidget):
     # --- API для обновления категорий снаружи ---
 
     def set_categories(self, categories: list[str]) -> None:
-        \"\"\"Обновить список категорий (без дубликатов, пустые отфильтровываются).\"\"\"
+        """Обновить список категорий (без дубликатов, пустые отфильтровываются)."""
         current_text = self.category_combo.currentText()
         self.category_combo.blockSignals(True)
 
