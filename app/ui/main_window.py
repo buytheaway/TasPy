@@ -25,6 +25,8 @@ from app.ui.views.statusbar import MainStatusBar   # твой статусбар
 from app.ui.views.sidebar import SideBar           # новый сайдбар
 from app.ui.views.kanban import KanbanBoard        # новая канбан-доска
 from app.ui.views.calendar_panel import CalendarPanel  # новый календарь
+from app.usecases.add_task import AddTask, AddTaskInput
+from app.usecases.delete_task import DeleteTask, DeleteTaskInput
 
 
 class MainWindow(QMainWindow):
@@ -128,12 +130,17 @@ class MainWindow(QMainWindow):
 
         # выбор задачи в дереве → загрузка в редактор
         self.task_tree.selection_changed.connect(self._on_task_selected)
+        if hasattr(self.task_tree, "context_action"):
+            self.task_tree.context_action.connect(self._on_task_context)
 
         # сайдбар фильтры
         self.sidebar.searchChanged.connect(self._on_search_changed)
         self.sidebar.statusChanged.connect(self._on_status_filter_changed)
         self.sidebar.categoryChanged.connect(self._on_category_filter_changed)
         self.sidebar.quickFilterSelected.connect(self._on_quick_filter)
+
+        if hasattr(self.kanban, "context_action"):
+            self.kanban.context_action.connect(self._on_task_context)
 
         # канбан drag&drop → смена статуса (Kanban сам обновляет статус в репозитории)
         # if your Kanban emits a statusChangeRequested signal, connect it here
@@ -239,6 +246,17 @@ class MainWindow(QMainWindow):
         # пока можно просто логировать или в будущем сделать умный фильтр
         print("[TasPy] quick filter selected:", key)
 
+    def _on_task_context(self, action: str, task_id: int) -> None:
+        new_task = None
+        if action == "new":
+            new_task = AddTask(self.repo, self.bus).execute(AddTaskInput(None, "Новая задача"))
+        elif action == "add_sub" and task_id > 0:
+            new_task = AddTask(self.repo, self.bus).execute(AddTaskInput(task_id, "Подзадача"))
+        elif action == "delete" and task_id > 0:
+            DeleteTask(self.repo, self.bus).execute(DeleteTaskInput(task_id, cascade=True))
+
+        self._refresh_after_mutation(new_task.id if new_task else None)
+
     def _on_kanban_status_change(self, task_id: int, new_status: str) -> None:
         # меняем статус задачи и обновляем канбан/дерево
         task = self.repo.get(task_id)
@@ -265,3 +283,17 @@ class MainWindow(QMainWindow):
         if hasattr(self.task_tree, "current_task_id"):
             return self.task_tree.current_task_id()
         return None
+
+    def _refresh_after_mutation(self, select_id: int | None = None) -> None:
+        if hasattr(self.task_tree, "reload"):
+            self.task_tree.reload()
+        self._reload_kanban()
+        self._reload_calendar_for_date(self.calendar_panel.current_date())
+        if hasattr(self.statusbar, "update_counts"):
+            self.statusbar.update_counts()
+        if select_id:
+            if hasattr(self.task_tree, "select_task"):
+                self.task_tree.select_task(select_id)
+            self.task_editor.load_task(select_id)
+        else:
+            self.task_editor.clear()

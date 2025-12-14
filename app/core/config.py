@@ -6,7 +6,7 @@ from pydantic import Field
 class AppConfig(BaseSettings):
     app_name: str = "TaskTree"
     db_path: Path = Field(default=Path("tasks.db"))
-    theme_qss: Path = Field(default=Path("app/themes/qss/dark_neutral.qss"))
+    theme_qss: Path = Field(default=Path("app/themes/qss/future_neon.qss"))
     lang: str = "ru"
 
     class Config:

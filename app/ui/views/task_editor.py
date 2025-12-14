@@ -29,6 +29,7 @@ class TaskEditor(QWidget):
         self.repo = repo
         self.bus = bus
         self.current_id: int | None = None
+        self._loading: bool = False
 
         # --- Верхняя часть (заголовок)
         self.title = QLineEdit()
@@ -122,6 +123,12 @@ class TaskEditor(QWidget):
         if task_id == -1:
             self._clear()
             return
+        self._loading = True
+        for w in (self.title, self.desc, self.status, self.priority, self.category, self.due):
+            try:
+                w.blockSignals(True)
+            except Exception:
+                pass
         obj = self.repo.get(task_id)
         self.current_id = task_id
         self.title.setText(obj.title or "")
@@ -134,8 +141,15 @@ class TaskEditor(QWidget):
         else:
             self.due.setDateTime(QDateTime.currentDateTime())
         self._update_timers()
+        for w in (self.title, self.desc, self.status, self.priority, self.category, self.due):
+            try:
+                w.blockSignals(False)
+            except Exception:
+                pass
+        self._loading = False
 
     def _clear(self):
+        self._loading = True
         self.current_id = None
         self.title.clear()
         self.desc.clear()
@@ -143,10 +157,11 @@ class TaskEditor(QWidget):
         self.category.setCurrentIndex(0)
         self.countdown.setText("-")
         self.overdue.setText("-")
+        self._loading = False
 
     # --- сохранение ---
     def _save(self):
-        if not self.current_id:
+        if self._loading or not self.current_id:
             return
         fields = {
             "title": self.title.text(),
