@@ -15,6 +15,10 @@ class MoveTask:
         self.bus = bus
 
     def execute(self, inp: MoveTaskInput):
-        # TODO: запретить перенос в своего потомка (валидация цикла)
+        if inp.new_parent_id:
+            subtree_ids = {t.id for t in self.repo.subtree(inp.task_id)}
+            if inp.new_parent_id in subtree_ids:
+                # ignore invalid move that would create a cycle
+                return
         self.repo.move(inp.task_id, inp.new_parent_id, inp.new_order_index)
         self.bus.emit(TaskMoved(inp.task_id))

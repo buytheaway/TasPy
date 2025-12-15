@@ -17,14 +17,15 @@ from app.core.events import EventBus
 from app.data.repositories import TaskRepository
 from app.domain.models import Task
 
-# наши новые/существующие вьюшки
-from app.ui.views.toolbar import MainToolbar        # твой тулбар
-from app.ui.views.task_tree import TaskTree        # твоё дерево задач
-from app.ui.views.task_editor import TaskEditor    # твой редактор
-from app.ui.views.statusbar import MainStatusBar   # твой статусбар
-from app.ui.views.sidebar import SideBar           # новый сайдбар
-from app.ui.views.kanban import KanbanBoard        # новая канбан-доска
-from app.ui.views.calendar_panel import CalendarPanel  # новый календарь
+from app.ui.views.toolbar import MainToolbar
+from app.ui.views.task_tree import TaskTree
+from app.ui.views.task_editor import TaskEditor
+from app.ui.views.statusbar import MainStatusBar
+from app.ui.views.sidebar import SideBar
+from app.ui.views.kanban import KanbanBoard
+from app.ui.views.calendar_panel import CalendarPanel
+from app.ui.i18n import tr
+from app.domain.models import Status
 from app.usecases.add_task import AddTask, AddTaskInput
 from app.usecases.delete_task import DeleteTask, DeleteTaskInput
 
@@ -33,7 +34,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
-        self.setWindowTitle("TasPy — Task Manager")
+        self.setWindowTitle(tr("app.title"))
 
         # доменная часть
         self.bus = EventBus()
@@ -154,6 +155,16 @@ class MainWindow(QMainWindow):
         # но на всякий случай можно дергать ручной апдейт, если там есть метод update_counts()
         if hasattr(self.statusbar, "update_counts"):
             self.bus.subscribe("*", lambda _: self.statusbar.update_counts())  # примитивный вариант
+
+    def refresh_labels(self) -> None:
+        """Refresh UI texts after language change."""
+        self.setWindowTitle(tr("app.title"))
+        if hasattr(self.toolbar, "_refresh_texts"):
+            self.toolbar._refresh_texts()
+        if hasattr(self.statusbar, "refresh"):
+            self.statusbar.refresh()
+        if hasattr(self.sidebar, "refresh_labels"):
+            self.sidebar.refresh_labels()
 
     # ==============================
     #   Seed данных

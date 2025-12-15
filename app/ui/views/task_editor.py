@@ -12,15 +12,7 @@ from app.domain.models import Status
 
 
 def _status_values():
-    vals = []
-    for n in ("TODO", "IN_PROGRESS", "DONE"):
-        v = getattr(Status, n, None)
-        if v is None:
-            continue
-        vals.append(getattr(v, "value", v))
-    if not vals:
-        vals = ["todo", "in_progress", "done"]
-    return vals
+    return [s.value for s in Status]
 
 
 class TaskEditor(QWidget):
