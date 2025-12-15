@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QListWidget, QListWidgetItem, QLabel, QVBoxLayout, QMenu
 from PySide6.QtCore import Qt, Signal
+
 from app.data.repositories import TaskRepository
 from app.core.events import EventBus
 from app.usecases.update_task import UpdateTask, UpdateTaskInput
@@ -90,37 +93,48 @@ class KanbanBoard(QWidget):
         self.reload()
 
     def reload(self):
-        for lw in self.cols.values(): lw.clear()
         rows = self.repo.search(self._filters.get("q") or "")
-        # простая фильтрация
-        st = self._filters.get("status")
-        cat = (self._filters.get("category") or "").strip()
-        preset = self._filters.get("preset")
+        self._render(rows)
 
-        from datetime import datetime, timedelta
+    def _render(self, tasks: list):
+        for lw in self.cols.values():
+            lw.clear()
+        for t in tasks:
+            if not self._should_include(t):
+                continue
+            st = (t.status or "todo").strip()
+            if st not in self.cols:
+                st = "todo"
+            it = QListWidgetItem(f"{t.title} | {t.status} | prio {t.priority or 3}")
+            it.setData(Qt.UserRole, t.id)
+            self.cols[st].addItem(it)
+
+    def _should_include(self, task) -> bool:
+        """Apply current filters to a task."""
+        q = (self._filters.get("q") or "").strip()
+        if q and q.lower() not in (task.title or "").lower():
+            return False
+
+        st_filter = (self._filters.get("status") or "").strip()
+        if st_filter and (task.status or "").strip() != st_filter:
+            return False
+
+        cat_filter = (self._filters.get("category") or "").strip()
+        if cat_filter and (getattr(task, "category", "") or "").strip() != cat_filter:
+            return False
+
+        preset = (self._filters.get("preset") or "").strip()
         now = datetime.utcnow()
-
-        def pass_presets(t):
-            if preset == "Сегодня":
-                return t.due_at and t.due_at.date() == now.date()
-            if preset == "Неделя":
-                return t.due_at and 0 <= (t.due_at - now).days <= 7
-            if preset == "Просроченные":
-                return t.due_at and t.due_at < now
-            if preset == "Высокий приоритет":
-                return (t.priority or 0) <= 2
-            return True
+        if preset == "today":
+            return task.due_at and task.due_at.date() == now.date()
+        if preset == "week":
+            return task.due_at and 0 <= (task.due_at - now).days <= 7
+        if preset == "overdue":
+            return task.due_at and task.due_at < now
+        if preset == "high_priority":
+            return (task.priority or 0) <= 2
+        return True
 
     def set_tasks(self, tasks: list):
         """Populate kanban from an explicit tasks list (used by MainWindow)."""
-        for lw in self.cols.values(): lw.clear()
-        for t in tasks:
-            # simple filters
-            if self._filters.get("q") and self._filters.get("q") not in (t.title or ""):
-                continue
-            st = t.status or "todo"
-            if st not in self.cols:
-                st = "todo"
-            it = QListWidgetItem(f"{t.title} • {t.status} • prio {t.priority or 3}")
-            it.setData(Qt.UserRole, t.id)
-            self.cols[st].addItem(it)
+        self._render(tasks)
