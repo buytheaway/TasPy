@@ -30,3 +30,4 @@ backups/
 # OS
 Thumbs.db
 .DS_Store
+app/ui/views/__pycache__/task_editor.cpython-312.pyc
